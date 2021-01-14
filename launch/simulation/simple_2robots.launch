@@ -1,0 +1,28 @@
+<launch>
+  <arg name="world_file" default="sample_01_2robots.world" />
+  <arg name="robot_model" default="$(find oit_robosim)/urdf/microbot_01.xacro"/>
+
+  <arg name="use_mouse" default="true" />
+  <arg name="use_rviz" default="true" />
+
+  <include file="$(find oit_robosim)/launch/simulation/stage.launch">
+    <arg name="world_file" default="$(arg world_file)" />
+  </include>
+
+  <include file="$(find oit_robosim)/launch/includes/tf_2robots.launch" />
+
+  <group if="$(arg use_mouse)">
+    <include file="$(find oit_robosim)/launch/includes/mouse.launch">
+      <arg name="robot_index" value="0" />
+    </include>
+    <include file="$(find oit_robosim)/launch/includes/mouse.launch">
+      <arg name="robot_index" value="1" />
+    </include>
+  </group>
+
+  <group if="$(arg use_rviz)">
+    <include file="$(find oit_robosim)/launch/includes/rviz.launch">
+      <arg name="rviz_conf_file" default="simple_2robots.rviz" />
+    </include>
+  </group>
+</launch>

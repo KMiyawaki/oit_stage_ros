@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:include filename="$(find oit_robosim)/urdf/microbot_01_base.xacro" />
+  
+  <joint name="laser_joint" type="fixed">
+    <origin xyz="${laser_x} 0 ${laser_z}" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="base_laser_link"/>
+  </joint>
+
+  <xacro:property name="laser_d" value="0.06" />
+  <xacro:property name="laser_w" value="0.06" />
+  <xacro:property name="laser_h" value="0.06" />
+  <xacro:property name="laser_x" value="-0.0475" />
+  <xacro:property name="laser_z" value="${body_h}" />
+
+  <link name="base_laser_link">
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <box size="${laser_d} ${laser_w} ${laser_h}"/>
+      </geometry>
+    </collision>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <box size="${laser_d} ${laser_w} ${laser_h}"/>
+      </geometry>
+      <material name="laser_mat">
+        <color rgba="0.0 0.0 0.0 0.8"/>
+      </material>
+    </visual>
+  </link>
+</robot>

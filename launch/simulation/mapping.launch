@@ -1,0 +1,36 @@
+<launch>
+  <arg name="world_file" default="sample_01.world" />
+  <arg name="robot_model" default="$(find oit_robosim)/urdf/microbot_01.xacro"/>
+
+  <arg name="use_mouse" default="true" />
+  <arg name="use_rviz" default="true" />
+
+  <arg name="xmin" default="-5"/>
+  <arg name="xmax" default="5"/>
+  <arg name="ymin" default="-5"/>
+  <arg name="ymax" default="5"/>
+
+  <include file="$(find oit_robosim)/launch/simulation/stage.launch">
+    <arg name="world_file" value="$(arg world_file)"/>
+  </include>
+  
+  <include file="$(find oit_robosim)/launch/includes/state_publisher.launch" />
+
+  <group if="$(arg use_mouse)">
+    <include file="$(find oit_robosim)/launch/includes/mouse.launch" />
+  </group>
+
+  <group if="$(arg use_rviz)">
+    <include file="$(find oit_robosim)/launch/includes/rviz.launch">
+      <arg name="rviz_conf_file" default="navigation.rviz" />
+    </include>
+  </group>
+
+  <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">
+    <remap from="scan" to="base_scan" />
+    <param name="xmin" value="$(arg xmin)" />
+    <param name="xmax" value="$(arg xmax)" />
+    <param name="ymin" value="$(arg ymin)" />
+    <param name="ymax" value="$(arg ymax)" />
+  </node>
+</launch>

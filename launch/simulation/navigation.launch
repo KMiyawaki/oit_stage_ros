@@ -1,0 +1,41 @@
+<launch>  
+  <arg name="map_file" default="sample_01.yaml" />
+  <arg name="world_file" default="sample_01.world" />
+  <arg name="robot_model" default="$(find oit_robosim)/urdf/microbot_01.xacro"/>
+
+  <arg name="use_mouse" default="false" />
+  <arg name="use_rviz" default="true" />
+
+  <arg name="map_dir" default="$(find oit_robosim)/maps" />
+  <arg name="map_path" default="$(arg map_dir)/$(arg map_file)" />
+
+  <arg name="initial_pose_x" default="0" />
+  <arg name="initial_pose_y" default="0" />
+  <arg name="initial_pose_a" default="0" />
+  
+  <include file="$(find oit_robosim)/launch/simulation/stage.launch">
+    <arg name="world_file" value="$(arg world_file)"/>
+  </include>
+  
+  <include file="$(find oit_robosim)/launch/includes/state_publisher.launch" />
+
+  <group if="$(arg use_mouse)">
+    <include file="$(find oit_robosim)/launch/includes/mouse.launch" />
+  </group>
+
+  <group if="$(arg use_rviz)">
+    <include file="$(find oit_robosim)/launch/includes/rviz.launch">
+      <arg name="rviz_conf_file" default="navigation.rviz" />
+    </include>
+  </group>
+
+  <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_path)" respawn="false" />
+
+  <include file="$(find oit_robosim)/launch/includes/amcl.xml">
+    <arg name="initial_pose_x" value="$(arg initial_pose_x)" />
+    <arg name="initial_pose_y" value="$(arg initial_pose_y)" />
+    <arg name="initial_pose_a" value="$(arg initial_pose_a)" />
+  </include>
+
+  <include file="$(find oit_robosim)/launch/includes/move_base/move_base.xml"/>
+</launch>

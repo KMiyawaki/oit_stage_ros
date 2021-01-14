@@ -1,0 +1,29 @@
+<launch>
+  <arg name="joy_dev" default="/dev/input/js0" />
+  <arg name="joy_conf" default="$(find oit_robosim)/config/my_elecom.yaml" />
+  <arg name="robot_index" default="-1" />
+
+  <group if="$(eval robot_index=='-1')">
+    <node pkg="joy" type="joy_node" name="joy_node">
+      <param name="dev" value="$(arg joy_dev)" />
+      <param name="deadzone" value="0.1" />
+      <param name="autorepeat_rate" value="20" />
+    </node>
+
+    <node pkg="teleop_twist_joy" name="teleop_twist_joy" type="teleop_node">
+      <rosparam command="load" file="$(arg joy_conf)" />
+    </node>
+  </group>
+
+  <group if="$(eval robot_index!='-1')">
+    <node pkg="joy" type="joy_node" name="joy_node_$(arg robot_index)">
+      <param name="dev" value="$(arg joy_dev)" />
+      <param name="deadzone" value="0.1" />
+      <param name="autorepeat_rate" value="20" />
+    </node>
+
+    <node pkg="teleop_twist_joy" name="teleop_twist_joy" type="teleop_node_$(arg robot_index)">
+      <rosparam command="load" file="$(arg joy_conf)" />
+    </node>
+  </group>
+</launch>

@@ -1,0 +1,7 @@
+<launch>
+  <arg name="rviz_conf_file" default="simple.rviz" />
+  <arg name="rviz_conf_dir" default="$(find oit_robosim)/config/rviz" />
+  <arg name="rviz_conf_path" default="$(arg rviz_conf_dir)/$(arg rviz_conf_file)" />
+  <arg name="rviz_required" default="true" />
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rviz_conf_path)" required="$(arg rviz_required)" />
+</launch>

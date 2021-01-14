@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="microbot_01">
+  <xacro:property name="body_d" value="0.145" />
+  <xacro:property name="body_w" value="0.115" />
+  <xacro:property name="body_h" value="0.1265" />
+  <xacro:property name="body_x" value="${0.0385-body_d/2}" />
+  <xacro:property name="body_z" value="${body_h/2}" />
+
+  <link name="base_link">
+    <collision>
+      <origin rpy="0 0 0" xyz="${body_x} 0 ${body_z}"/>
+      <geometry>
+        <box size="${body_d} ${body_w} ${body_h}"/>
+      </geometry>
+    </collision>
+    <visual>
+      <origin rpy="0 0 0" xyz="${body_x} 0 ${body_z}"/>
+      <geometry>
+        <box size="${body_d} ${body_w} ${body_h}"/>
+      </geometry>
+      <material name="vehicle_mat">
+        <color rgba="1.0 0.0 0.0 0.5"/>
+      </material>
+    </visual>
+  </link>
+</robot>

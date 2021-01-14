@@ -1,0 +1,6 @@
+<launch>
+  <node pkg="oit_robosim" type="image_proc_sample.py" name="image_proc_sample">
+  </node>
+  <node pkg="rqt_image_view" type="rqt_image_view" name="rqt_image_view">
+  </node>
+</launch>
