@@ -1,5 +1,5 @@
 <launch>
-  <arg name="model_dir" default="$(find oit_robosim)/urdf"/>
+  <arg name="model_dir" default="$(find oit_stage_ros)/urdf"/>
   <arg name="model_file" default="microbot_01_base.xacro"/>
   <arg name="model_path" default="$(arg model_dir)/$(arg model_file)"/>
   <param name="robot_description" command="$(find xacro)/xacro --inorder $(arg model_path)" />

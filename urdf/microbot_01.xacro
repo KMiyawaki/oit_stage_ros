@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <xacro:include filename="$(find oit_robosim)/urdf/microbot_01_base.xacro" />
+  <xacro:include filename="$(find oit_stage_ros)/urdf/microbot_01_base.xacro" />
   
   <joint name="laser_joint" type="fixed">
     <origin xyz="${laser_x} 0 ${laser_z}" rpy="0 0 0"/>

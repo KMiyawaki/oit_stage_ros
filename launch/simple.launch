@@ -1,0 +1,25 @@
+<launch>
+  <arg name="world_name" default="LayoutA" />
+  <arg name="world_dir" default="$(find oit_pbl_maps)/maps" />
+  <arg name="robot_model" default="$(find oit_stage_ros)/urdf/microbot_01.xacro"/>
+
+  <arg name="use_mouse" default="true" />
+  <arg name="use_rviz" default="true" />
+
+  <include file="$(find oit_stage_ros)/launch/stage.launch">
+    <arg name="world_name" value="$(arg world_name)" />
+    <arg name="world_dir" value="$(arg world_dir)" />
+  </include>
+
+  <include file="$(find oit_stage_ros)/launch/includes/state_publisher.launch" />
+
+  <group if="$(arg use_mouse)">
+    <include file="$(find oit_stage_ros)/launch/includes/mouse.launch" />
+  </group>
+
+  <group if="$(arg use_rviz)">
+    <include file="$(find oit_stage_ros)/launch/includes/rviz.launch">
+      <arg name="rviz_conf_file" default="simple.rviz" />
+    </include>
+  </group>
+</launch>
