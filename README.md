@@ -28,6 +28,22 @@ RViz と[stage](https://player-stage-manual.readthedocs.io/en/latest/)、[mouse_
 
 `roslaunch`を実行した端末で`Ctrl＋C`で全プログラムを終了させる。`mouse_teleop`のウィンドウだけは閉じるボタンで終了させる。
 
+#### Windowsプログラムからロボットをコントロールする
+
+[rosbridge_server](http://wiki.ros.org/rosbridge_server)を使い、WindowsからTCP/IPでROSトピックをパブリッシュする。  
+ROSでそのトピックを受信し、データに応じてロボットの速度指令を送信する。  
+マウステレオペを起動した状態で以下のコマンドを実行する。
+
+```shell
+rosrun oit_stage_ros control_from_win_sample.py
+```
+
+Windows側では次のリポジトリをクローンしておく。
+
+- [KMiyawaki/win_rosclient_sample](https://github.com/KMiyawaki/win_rosclient_sample.git)
+
+クローンした`win_rosclient_sample/win_rosclient_sample.py`を実行し、Windowsターミナルから`forward`、`back`、`left`、`right`などとコマンドを送るとロボットが動く。それ以外の文字列の場合は停止する。
+
 ### 地図作成
 
 ```shell
