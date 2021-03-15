@@ -2,9 +2,10 @@
   <arg name="world_name" default="LayoutA" />
   <arg name="world_dir" default="$(find oit_pbl_maps)/maps" />
   <arg name="robot_model" default="$(find oit_stage_ros)/urdf/microbot_01.xacro"/>
-
+  
   <arg name="use_mouse" default="true" />
   <arg name="use_rviz" default="true" />
+  <arg name="use_rosbridge" default="true" />
 
   <include file="$(find oit_stage_ros)/launch/stage.launch">
     <arg name="world_name" value="$(arg world_name)" />
@@ -13,13 +14,11 @@
 
   <include file="$(find oit_stage_ros)/launch/includes/state_publisher.launch" />
 
-  <group if="$(arg use_mouse)">
-    <include file="$(find oit_stage_ros)/launch/includes/mouse.launch" />
-  </group>
+  <include if="$(arg use_mouse)" file="$(find oit_stage_ros)/launch/includes/mouse.launch" />
 
-  <group if="$(arg use_rviz)">
-    <include file="$(find oit_stage_ros)/launch/includes/rviz.launch">
-      <arg name="rviz_conf_file" default="simple.rviz" />
-    </include>
-  </group>
+  <include if="$(arg use_rviz)" file="$(find oit_stage_ros)/launch/includes/rviz.launch">
+    <arg name="rviz_conf_file" default="simple.rviz" />
+  </include>
+
+  <include if="$(arg use_rosbridge)" file="$(find rosbridge_server)/launch/rosbridge_tcp.launch" />
 </launch>

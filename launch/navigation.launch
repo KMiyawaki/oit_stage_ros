@@ -1,10 +1,11 @@
-<launch>  
+<launch>
   <arg name="world_name" default="LayoutA" />
   <arg name="world_dir" default="$(find oit_pbl_maps)/maps" />
   <arg name="robot_model" default="$(find oit_stage_ros)/urdf/microbot_01.xacro"/>
 
   <arg name="use_mouse" default="false" />
   <arg name="use_rviz" default="true" />
+  <arg name="use_rosbridge" default="true" />
 
   <arg name="map_name" default="$(arg world_name)" />
   <arg name="map_dir" default="$(arg world_dir)" />
@@ -13,23 +14,19 @@
   <arg name="initial_pose_x" default="0" />
   <arg name="initial_pose_y" default="0" />
   <arg name="initial_pose_a" default="0" />
-  
+
   <include file="$(find oit_stage_ros)/launch/stage.launch">
     <arg name="world_name" value="$(arg world_name)" />
     <arg name="world_dir" value="$(arg world_dir)" />
   </include>
-  
+
   <include file="$(find oit_stage_ros)/launch/includes/state_publisher.launch" />
 
-  <group if="$(arg use_mouse)">
-    <include file="$(find oit_stage_ros)/launch/includes/mouse.launch" />
-  </group>
+  <include if="$(arg use_mouse)" file="$(find oit_stage_ros)/launch/includes/mouse.launch" />
 
-  <group if="$(arg use_rviz)">
-    <include file="$(find oit_stage_ros)/launch/includes/rviz.launch">
-      <arg name="rviz_conf_file" default="navigation.rviz" />
-    </include>
-  </group>
+  <include if="$(arg use_rviz)" file="$(find oit_stage_ros)/launch/includes/rviz.launch">
+    <arg name="rviz_conf_file" default="navigation.rviz" />
+  </include>
 
   <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_path)" respawn="false" />
 
@@ -40,4 +37,6 @@
   </include>
 
   <include file="$(find oit_stage_ros)/launch/includes/move_base/move_base.xml"/>
+
+  <include if="$(arg use_rosbridge)" file="$(find rosbridge_server)/launch/rosbridge_tcp.launch" />
 </launch>

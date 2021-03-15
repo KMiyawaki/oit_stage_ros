@@ -5,6 +5,7 @@
 
   <arg name="use_mouse" default="true" />
   <arg name="use_rviz" default="true" />
+  <arg name="use_rosbridge" default="true" />
 
   <arg name="xmin" default="-5"/>
   <arg name="xmax" default="5"/>
@@ -18,15 +19,11 @@
 
   <include file="$(find oit_stage_ros)/launch/includes/state_publisher.launch" />
 
-  <group if="$(arg use_mouse)">
-    <include file="$(find oit_stage_ros)/launch/includes/mouse.launch" />
-  </group>
+  <include if="$(arg use_mouse)" file="$(find oit_stage_ros)/launch/includes/mouse.launch" />
 
-  <group if="$(arg use_rviz)">
-    <include file="$(find oit_stage_ros)/launch/includes/rviz.launch">
-      <arg name="rviz_conf_file" default="navigation.rviz" />
-    </include>
-  </group>
+  <include if="$(arg use_rviz)" file="$(find oit_stage_ros)/launch/includes/rviz.launch">
+    <arg name="rviz_conf_file" default="navigation.rviz" />
+  </include>
 
   <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">
     <remap from="scan" to="base_scan" />
@@ -35,4 +32,6 @@
     <param name="ymin" value="$(arg ymin)" />
     <param name="ymax" value="$(arg ymax)" />
   </node>
+  
+  <include if="$(arg use_rosbridge)" file="$(find rosbridge_server)/launch/rosbridge_tcp.launch" />
 </launch>
