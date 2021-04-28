@@ -51,7 +51,7 @@ class ControlFromWinSampleNode(object):
 def main():
     script_name = os.path.basename(__file__)
     rospy.init_node(os.path.splitext(script_name)[0])
-    rospy.sleep(0.5)  # 起動直後は rospy.Time.now() がゼロを返す．
+    rospy.sleep(0.5)  # rospy.Time.now() returns 0, without this sleep.
 
     process_rate = rospy.get_param("~process_rate", 20.0)
     rate = rospy.Rate(process_rate)
