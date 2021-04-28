@@ -46,22 +46,22 @@ class CommunicationWithWinSampleNode(object):
 
     def main(self):
         sleep_time = 1
-        my_name = rospy.get_name()
+        node_name = rospy.get_name()
         ac = actionlib.SimpleActionClient(self.move_base_name, MoveBaseAction)
         # Waiting action server for navigation
         while not ac.wait_for_server(rospy.Duration(5)):
             rospy.loginfo(
-                "%s:Waiting for the move_base action server to come up", my_name)
+                "%s:Waiting for the move_base action server to come up", node_name)
         rospy.loginfo("%s:The server %s comes up",
-                      my_name, self.move_base_name)
-        rospy.loginfo("%s:Sending goal", my_name)
+                      node_name, self.move_base_name)
+        rospy.loginfo("%s:Sending goal", node_name)
         ac.send_goal(self.make_navigation_goal(1.15, 2.42, math.radians(90)))
         finished = ac.wait_for_result(rospy.Duration(30))
         state = ac.get_state()
         if finished:
-            rospy.loginfo("%s:Finished: (%d)", my_name, state)
+            rospy.loginfo("%s:Finished: (%d)", node_name, state)
         else:
-            rospy.loginfo("%s:Time out: (%d)", my_name, state)
+            rospy.loginfo("%s:Time out: (%d)", node_name, state)
 
         rospy.sleep(5)
         # Send message to windows
@@ -74,7 +74,7 @@ class CommunicationWithWinSampleNode(object):
             recv = self.recv_message(self.topic_name_from_win, 2)
             if recv:
                 rospy.loginfo("%s:Receive from win(%d):%s",
-                              my_name, i, recv.data)
+                              node_name, i, recv.data)
             if rospy.get_time() - tm > 20:
                 break
 
