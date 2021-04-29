@@ -87,6 +87,15 @@ angular:
 
 `robot_0`を`robot_1`にすれば別のロボットが走る。
 
+## ロボットの表情の表示
+
+1. マウステレオペ、もしくはナビゲーションを起動する。
+2. 別ターミナルで`rosrun oit_stage_ros face_image_publisher.py`を実行するとRViz上に表情が表示される。
+3. さらに別ターミナルで`rostopic pub /robot_face_type std_msgs/String "data: 'happy'" -1`と実行すると表情の画像が変わる。
+    - `'happy'`を`'sad'`や`'normal'`に変えて実行することもできる。
+
+![2021-01-15_182739.png](./images/2021-04-29_090555.png)
+
 ## Windows プログラムとの連携
 
 ### Windowsプログラムからロボットをコントロールする

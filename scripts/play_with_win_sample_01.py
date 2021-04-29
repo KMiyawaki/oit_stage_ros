@@ -8,14 +8,17 @@ import rospy
 from geometry_msgs.msg import Twist
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from std_msgs.msg import String
+from sensor_msgs.msg import Image
 from tf.transformations import quaternion_from_euler
 from geometry_msgs.msg import Quaternion
 
 
 class PlayWithWinSampleNode(object):
-    def __init__(self, topic_name_pairs, move_base_name="move_base"):
+    def __init__(self, topic_name_pairs, topic_name_robot_face_type, move_base_name="move_base"):
         self.topic_name_pairs = topic_name_pairs
         self.move_base_name = move_base_name
+        self.pub_robot_face_type = rospy.Publisher(
+            topic_name_robot_face_type, String, queue_size=10)
 
     def recv_message(self, topic_name, timeout):
         try:
@@ -86,9 +89,11 @@ class PlayWithWinSampleNode(object):
         rospy.sleep(3)
         if "win" in message_from_win:
             rospy.loginfo("Yeah!!")
+            self.pub_robot_face_type.publish("happy")
             return True
         else:
             rospy.loginfo("Ouch!!")
+            self.pub_robot_face_type.publish("sad")
             return False
 
     def play_game_B(self, frame_interval):
@@ -132,9 +137,11 @@ class PlayWithWinSampleNode(object):
         rospy.sleep(3)
         if "win" in message_from_win:
             rospy.loginfo("Yeah!!")
+            self.pub_robot_face_type.publish("happy")
             return True
         else:
             rospy.loginfo("Ouch!!")
+            self.pub_robot_face_type.publish("sad")
             return False
 
     def main(self):
@@ -142,12 +149,16 @@ class PlayWithWinSampleNode(object):
         node_name = rospy.get_name()
         ac = actionlib.SimpleActionClient(self.move_base_name, MoveBaseAction)
         # Waiting action server for navigation
-        while not ac.wait_for_server(rospy.Duration(5)):
-            rospy.loginfo(
-                "%s:Waiting for the move_base action server to come up", node_name)
+        if ac.wait_for_server(rospy.Duration(5)) == False:
+            rospy.logerr(
+                "%s:Can't connect to move_base action server", node_name)
+            return
         rospy.loginfo("%s:The server %s comes up",
                       node_name, self.move_base_name)
-        rospy.sleep(5)
+        # Show normal face image
+        for _ in range(0, 10):
+            self.pub_robot_face_type.publish("normal")
+            rospy.sleep(0.5)
         # Play game A
         result_A = self.play_game_A(frame_interval)
         # Go to next point
@@ -172,7 +183,7 @@ def main():
         [
             ("/from_windows_a", "/from_ros_a"),
             ("/from_windows_b", "/from_ros_b")
-        ])
+        ], "/robot_face_type")
     rospy.loginfo("%s:Started", rospy.get_name())
 
     node.main()
