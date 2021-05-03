@@ -6,11 +6,10 @@ import random
 import actionlib
 import rospy
 from geometry_msgs.msg import Twist
-from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+from move_base_msgs.msg import MoveBaseAction
 from std_msgs.msg import String
 from sensor_msgs.msg import Image
-from tf.transformations import quaternion_from_euler
-from geometry_msgs.msg import Quaternion
+from utils import make_navigation_goal, navigation, wait_string_message, RosWinMessenger
 
 
 class PlayWithWinSampleNode(object):
@@ -20,74 +19,8 @@ class PlayWithWinSampleNode(object):
         self.pub_robot_face_type = rospy.Publisher(
             topic_name_robot_face_type, String, queue_size=10)
 
-    def recv_message(self, topic_name, timeout):
-        try:
-            return rospy.wait_for_message(topic_name, String, timeout)
-        except Exception as e:
-            rospy.logdebug(str(e))
-        return None
-
-    def make_navigation_goal(self, x, y, theta):
-        goal = MoveBaseGoal()
-        goal.target_pose.header.frame_id = "map"
-        goal.target_pose.header.stamp = rospy.Time.now()
-        goal.target_pose.pose.position.x = x
-        goal.target_pose.pose.position.y = y
-        q = quaternion_from_euler(0, 0, theta)
-        goal.target_pose.pose.orientation = Quaternion(q[0], q[1], q[2], q[3])
-        return goal
-
-    def navigation(self, action_server, x, y, theta):
-        node_name = rospy.get_name()
-        rospy.loginfo("%s:Sending goal", node_name)
-        action_server.send_goal(self.make_navigation_goal(x, y, theta))
-        finished = action_server.wait_for_result(rospy.Duration(30))
-        state = action_server.get_state()
-        if finished:
-            rospy.loginfo("%s:Finished: (%d)", node_name, state)
-        else:
-            rospy.loginfo("%s:Time out: (%d)", node_name, state)
-
-    def play_game_A(self, frame_interval):
-        node_name = rospy.get_name()
-        message_wait_limit = 30
-        # Prepare to play windows game A (Rock, Paper, Scissors)
-        topic_name_from_win, topic_name_from_ros = self.topic_name_pairs[0]
-        to_win_pub = rospy.Publisher(topic_name_from_ros, String, queue_size=1)
-        # Start game sequence A
-        rospy.loginfo("%s:Try to start game A", node_name)
-        tm = rospy.get_time()
-        message_from_win = ""
-        while rospy.get_time() - tm < message_wait_limit and not message_from_win:
-            # Send game start signal to windows game A
-            to_win_pub.publish("Start your game!")
-            rospy.sleep(frame_interval)
-            # Recieve messsage from windows
-            recv = self.recv_message(topic_name_from_win, 2)
-            if recv:
-                rospy.loginfo("%s:Receive from win:%s",
-                              node_name, recv.data)
-                message_from_win = recv.data
-        rospy.sleep(3)
-        # Select robot's hand_type
-        hand_type = random.choice(["Rock", "Paper", "Scissors"])
-        # Reset timer and clear windows message
-        tm = rospy.get_time()
-        message_from_win = ""
-        while rospy.get_time() - tm < message_wait_limit and not message_from_win:
-            # Send robot hand_type to windows game A
-            rospy.loginfo("%s:Robot select '%s'",
-                          node_name, hand_type)
-            to_win_pub.publish(hand_type)
-            rospy.sleep(frame_interval)
-            # Recieve messsage from windows
-            recv = self.recv_message(topic_name_from_win, 2)
-            if recv:
-                rospy.loginfo("%s:Receive from win:%s",
-                              node_name, recv.data)
-                message_from_win = recv.data
-        rospy.sleep(3)
-        if "win" in message_from_win:
+    def show_face(self, result):
+        if "win" in result:
             rospy.loginfo("Yeah!!")
             self.pub_robot_face_type.publish("happy")
             return True
@@ -96,56 +29,77 @@ class PlayWithWinSampleNode(object):
             self.pub_robot_face_type.publish("sad")
             return False
 
-    def play_game_B(self, frame_interval):
+    def play_game_rps(self):
         node_name = rospy.get_name()
-        message_wait_limit = 30
+        timeout = 30
+        # Prepare to play windows game Rock, Paper, Scissors
+        topic_name_from_win, topic_name_from_ros = self.topic_name_pairs[0]
+        to_win_pub = rospy.Publisher(topic_name_from_ros, String, queue_size=1)
+        messenger = RosWinMessenger(to_win_pub, topic_name_from_win)
+        # Start game sequence
+        rospy.loginfo("%s:Try to start game Rock, Paper, Scissors", node_name)
+        # Send game start signal to windows game Rock, Paper, Scissors, and wait user's hand type.
+        message_from_win = messenger.wait_response(
+            "Start your game!", None, timeout)
+        if message_from_win:
+            rospy.loginfo("%s:Receive from win:%s",
+                          node_name, message_from_win)
+        else:
+            rospy.logerr("%s:Timeout. can't start windows game Rock, Paper, Scissors", node_name)
+            return False
+        rospy.sleep(3)
+        # Select robot's hand_type
+        hand_type = random.choice(["rock", "paper", "scissors"])
+        rospy.loginfo("%s:Robot selects '%s'", node_name, hand_type)
+        # Send robot's choice to windows game Rock, Paper, Scissors, and wait game result
+        message_from_win = messenger.wait_response(
+            hand_type, ["win", "lose", "even"], timeout)
+        if message_from_win:
+            rospy.loginfo("%s:Receive from win:%s",
+                          node_name, message_from_win)
+        else:
+            rospy.logerr(
+                "%s:Timeout. can't get windows game Rock, Paper, Scissors result", node_name)
+            return False
+        rospy.sleep(1)
+        return self.show_face(message_from_win)
+
+    def play_game_B(self):
+        node_name = rospy.get_name()
+        timeout = 30
         # Prepare to play windows game B (Look that way, Acchimuite Hoi)
         topic_name_from_win, topic_name_from_ros = self.topic_name_pairs[1]
         to_win_pub = rospy.Publisher(topic_name_from_ros, String, queue_size=1)
+        messenger = RosWinMessenger(to_win_pub, topic_name_from_win)
         # Start game sequence B
         rospy.loginfo("%s:Try to start game B", node_name)
-        tm = rospy.get_time()
-        message_from_win = ""
-        while rospy.get_time() - tm < message_wait_limit and not message_from_win:
-            # Send game start signal to windows game B
-            to_win_pub.publish("Start your game!")
-            rospy.sleep(frame_interval)
-            # Recieve messsage from windows
-            recv = self.recv_message(topic_name_from_win, 2)
-            if recv:
-                rospy.loginfo("%s:Receive from win:%s",
-                              node_name, recv.data)
-                message_from_win = recv.data
+        # Send game start signal to windows game Rock, Paper, Scissors, and wait user's hand type.
+        message_from_win = messenger.wait_response(
+            "Start your game!", None, timeout)
+        if message_from_win:
+            rospy.loginfo("%s:Receive from win:%s",
+                          node_name, message_from_win)
+        else:
+            rospy.logerr("%s:Timeout. can't start windows game Rock, Paper, Scissors", node_name)
+            return False
         rospy.sleep(3)
         # Select face_direction
         face_direction = random.choice(["up", "down", "left", "right"])
-        # Reset timer and clear windows message
-        tm = rospy.get_time()
-        message_from_win = ""
-        while rospy.get_time() - tm < message_wait_limit and not message_from_win:
-            # Send robot hand_type to windows game B
-            rospy.loginfo("%s:Robot select '%s'",
-                          node_name, face_direction)
-            to_win_pub.publish(face_direction)
-            rospy.sleep(frame_interval)
-            # Recieve messsage from windows
-            recv = self.recv_message(topic_name_from_win, 2)
-            if recv:
-                rospy.loginfo("%s:Receive from win:%s",
-                              node_name, recv.data)
-                message_from_win = recv.data
-        rospy.sleep(3)
-        if "win" in message_from_win:
-            rospy.loginfo("Yeah!!")
-            self.pub_robot_face_type.publish("happy")
-            return True
+        rospy.loginfo("%s:Robot selects '%s'", node_name, face_direction)
+        # Send robot's choice to windows game B, and wait game result
+        message_from_win = messenger.wait_response(
+            face_direction, ["win", "lose", "even"], timeout)
+        if message_from_win:
+            rospy.loginfo("%s:Receive from win:%s",
+                          node_name, message_from_win)
         else:
-            rospy.loginfo("Ouch!!")
-            self.pub_robot_face_type.publish("sad")
+            rospy.logerr(
+                "%s:Timeout. can't get windows game Rock, Paper, Scissors result", node_name)
             return False
+        rospy.sleep(1)
+        return self.show_face(message_from_win)
 
     def main(self):
-        frame_interval = 1
         node_name = rospy.get_name()
         ac = actionlib.SimpleActionClient(self.move_base_name, MoveBaseAction)
         # Waiting action server for navigation
@@ -156,18 +110,14 @@ class PlayWithWinSampleNode(object):
         rospy.loginfo("%s:The server %s comes up",
                       node_name, self.move_base_name)
         # Show normal face image
-        for _ in range(0, 10):
-            self.pub_robot_face_type.publish("normal")
-            rospy.sleep(0.5)
-        # Play game A
-        result_A = self.play_game_A(frame_interval)
-        # Go to next point
-        self.navigation(ac, 1.15, 2.42, math.radians(90))
-        # Play game A
-        result_B = self.play_game_B(frame_interval)
+        self.pub_robot_face_type.publish("normal")
+        rospy.sleep(0.5)
+        result_A = self.play_game_rps()  # Play game Rock, Paper, Scissors
+        navigation(ac, 1.15, 2.42, math.radians(90))  # Go to next point
+        result_B = self.play_game_B()  # Play game B
         # Show game results
         rospy.loginfo("/* GAME RESULTS */")
-        rospy.loginfo("/* GAME (A):%s */",
+        rospy.loginfo("/* GAME (Rock, Paper, Scissors):%s */",
                       'Robot win' if result_A else 'Robot lose')
         rospy.loginfo("/* GAME (B):%s */",
                       'Robot win' if result_B else 'Robot lose')
@@ -181,7 +131,7 @@ def main():
 
     node = PlayWithWinSampleNode(
         [
-            ("/from_windows_a", "/from_ros_a"),
+            ("/from_windows_rps", "/from_ros_rps"),
             ("/from_windows_b", "/from_ros_b")
         ], "/robot_face_type")
     rospy.loginfo("%s:Started", rospy.get_name())

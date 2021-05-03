@@ -9,6 +9,7 @@ from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from std_msgs.msg import String
 from tf.transformations import quaternion_from_euler
 from geometry_msgs.msg import Quaternion
+from utils import navigation, wait_string_message
 
 
 class CommunicationWithWinSampleNode(object):
@@ -27,23 +28,6 @@ class CommunicationWithWinSampleNode(object):
         self.twist.angular.y = 0.0
         self.twist.angular.z = 0.0
 
-    def recv_message(self, topic_name, timeout):
-        try:
-            return rospy.wait_for_message(topic_name, String, timeout)
-        except Exception as e:
-            rospy.logdebug(str(e))
-        return None
-
-    def make_navigation_goal(self, x, y, theta):
-        goal = MoveBaseGoal()
-        goal.target_pose.header.frame_id = "map"
-        goal.target_pose.header.stamp = rospy.Time.now()
-        goal.target_pose.pose.position.x = x
-        goal.target_pose.pose.position.y = y
-        q = quaternion_from_euler(0, 0, theta)
-        goal.target_pose.pose.orientation = Quaternion(q[0], q[1], q[2], q[3])
-        return goal
-
     def main(self):
         sleep_time = 1
         node_name = rospy.get_name()
@@ -54,15 +38,7 @@ class CommunicationWithWinSampleNode(object):
                 "%s:Waiting for the move_base action server to come up", node_name)
         rospy.loginfo("%s:The server %s comes up",
                       node_name, self.move_base_name)
-        rospy.loginfo("%s:Sending goal", node_name)
-        ac.send_goal(self.make_navigation_goal(1.15, 2.42, math.radians(90)))
-        finished = ac.wait_for_result(rospy.Duration(30))
-        state = ac.get_state()
-        if finished:
-            rospy.loginfo("%s:Finished: (%d)", node_name, state)
-        else:
-            rospy.loginfo("%s:Time out: (%d)", node_name, state)
-
+        navigation(ac, 1.15, 2.42, math.radians(90))
         rospy.sleep(5)
         # Send message to windows
         for i in range(0, 10):
@@ -71,10 +47,10 @@ class CommunicationWithWinSampleNode(object):
         tm = rospy.get_time()
         # Recieve messsage from windows
         for i in range(0, 10):
-            recv = self.recv_message(self.topic_name_from_win, 2)
-            if recv:
+            message_from_win = wait_string_message(self.topic_name_from_win, 2)
+            if message_from_win:
                 rospy.loginfo("%s:Receive from win(%d):%s",
-                              node_name, i, recv.data)
+                              node_name, i, message_from_win)
             if rospy.get_time() - tm > 20:
                 break
 
