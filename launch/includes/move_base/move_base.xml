@@ -1,5 +1,5 @@
 <launch>
-  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+  <node pkg="move_base" type="move_base" respawn="true" name="move_base" output="screen">
     <param name="base_global_planner" value="navfn/NavfnROS"/>
     <!-- <param name="base_global_planner" value="carrot_planner/CarrotPlanner" /> -->
     <rosparam file="$(find oit_stage_ros)/launch/includes/move_base/move_base.yaml" command="load" />
